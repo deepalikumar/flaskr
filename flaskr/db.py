@@ -31,12 +31,16 @@ class Post(sql.Model):
         return '<Post %r>' % self.title
 
 
+def init_db():
+    with current_app.app_context():
+        sql.drop_all()
+        sql.create_all()
+
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
     """Clear the existing data and create new tables."""
-    sql.drop_all(app)
-    sql.create_all(app)
+    init_db()
     click.echo('Initialized the database.')
 
 def init_app(app):

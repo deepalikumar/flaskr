@@ -1,12 +1,24 @@
 import os
 import tempfile
+from datetime import datetime
 
 import pytest
 from flaskr import create_app
-from flaskr.db import get_db, init_db
+from flaskr.db import init_db, sql, User, Post
+from werkzeug import generate_password_hash
 
-with open(os.path.join(os.path.dirname(__file__), 'data.sql'), 'rb') as f:
-    _data_sql = f.read().decode('utf8')
+def seed_test_data():
+    for username, password in (('test', 'test'), ('other', 'other')):
+        user = User(username=username,
+            password=generate_password_hash(password))
+        sql.session.add(user)
+    
+    created = datetime(2018, 1, 1, 0, 0, 0)
+    post = Post(title='test title', body='test body',
+        author_id=1, created=created)
+    sql.session.add(post)
+
+    sql.session.commit()
 
 
 @pytest.fixture
@@ -15,12 +27,12 @@ def app():
 
     app = create_app({
         'TESTING': True,
-        'DATABASE': db_path,
+        'SQLALCHEMY_DATABASE_URI': 'sqlite:///%s' % db_path,
     })
 
     with app.app_context():
         init_db()
-        get_db().executescript(_data_sql)
+        seed_test_data()
 
     yield app
 
