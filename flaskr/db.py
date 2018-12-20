@@ -1,42 +1,45 @@
-import sqlite3
-
 import click
+from datetime import datetime
 from flask import current_app, g
 from flask.cli import with_appcontext
+from flask_sqlalchemy import SQLAlchemy
+
+sql = SQLAlchemy()
+
+class User(sql.Model):
+    id = sql.Column(sql.Integer, primary_key=True)
+    username = sql.Column(sql.String(80), unique=True, nullable=False)
+    password = sql.Column(sql.String(80), nullable=False)
+
+    def __repr__(self):
+        return '<User %r>' % self.username
 
 
-def get_db():
-    if 'db' not in g:
-        g.db = sqlite3.connect(
-            current_app.config['DATABASE'],
-            detect_types=sqlite3.PARSE_DECLTYPES
-        )
-        g.db.row_factory = sqlite3.Row
+class Post(sql.Model):
+    id = sql.Column(sql.Integer, primary_key=True)
+    title = sql.Column(sql.String(80), nullable=False)
+    body = sql.Column(sql.Text, nullable=False)
+    created = sql.Column(sql.DateTime, nullable=False,
+        default=datetime.utcnow)
 
-    return g.db
+    author_id = sql.Column(sql.Integer, sql.ForeignKey('user.id'),
+        nullable=False)
+    author = sql.relationship('User',
+        backref=sql.backref('posts', lazy=True))
 
-
-def close_db(e=None):
-    db = g.pop('db', None)
-
-    if db is not None:
-        db.close()
-
-def init_db():
-    db = get_db()
-
-    with current_app.open_resource('schema.sql') as f:
-        db.executescript(f.read().decode('utf8'))
+    def __repr__(self):
+        return '<Post %r>' % self.title
 
 
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
     """Clear the existing data and create new tables."""
-    init_db()
+    sql.drop_all(app)
+    sql.create_all(app)
     click.echo('Initialized the database.')
 
 def init_app(app):
-    app.teardown_appcontext(close_db)
+    sql.init_app(app)
     app.cli.add_command(init_db_command)
 
