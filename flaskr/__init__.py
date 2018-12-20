@@ -50,6 +50,6 @@ def create_app(test_config=None):
     app.add_url_rule('/', endpoint='index')
 
     from .api import PostAPI
-    register_api(app, PostAPI, 'post_api', '/api/posts', pk='post_id')
+    register_api(app, PostAPI, 'post_api', '/api/posts/', pk='post_id')
     
     return app

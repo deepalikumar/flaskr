@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import json, jsonify, request
 from flask.views import MethodView
 
 from ..db import Post, sql
@@ -12,7 +12,8 @@ class PostAPI(MethodView):
             return jsonify(Post.query.get(post_id).to_json())
 
     def post(self):
-        title, body = request.json['title'], request.json['body']
+        title, body, author_id = (request.json['title'], 
+        request.json['body'], request.json['author_id'])
         post = Post(title=title, body=body, author_id=author_id)
         sql.session.add(post)
         sql.session.commit()
@@ -22,8 +23,7 @@ class PostAPI(MethodView):
         post = Post.query.get(post_id)
         sql.session.delete(post)
         sql.session.commit()
-        return json.dumps({}), 204, 'application/json'
-
+        return jsonify({}), 204
     
     def put(self, post_id):        
         post = Post.query.get(post_id)
@@ -31,4 +31,4 @@ class PostAPI(MethodView):
         post.body = request.json['body']
         sql.session.add(post)
         sql.session.commit()
-        return jsonify(post.to_json()
+        return jsonify(post.to_json())
