@@ -14,7 +14,7 @@ def seed_test_data():
         sql.session.add(user)
     
     created = datetime(2018, 1, 1, 0, 0, 0)
-    post = Post(title='test title', body='test body',
+    post = Post(title='test title', body="test\nbody",
         author_id=1, created=created)
     sql.session.add(post)
 
