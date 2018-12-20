@@ -2,6 +2,15 @@ import os
 
 from flask import Flask
 
+def register_api(app, view, endpoint, url, pk='id', pk_type='int'):
+    view_func = view.as_view(endpoint)
+    app.add_url_rule(url, defaults={pk: None},
+                     view_func=view_func, methods=['GET',])
+    app.add_url_rule(url, view_func=view_func, methods=['POST',])
+    app.add_url_rule('%s<%s:%s>' % (url, pk_type, pk), view_func=view_func,
+                     methods=['GET', 'PUT', 'DELETE'])
+
+
 
 def create_app(test_config=None):
     # create and configure the app
@@ -30,7 +39,7 @@ def create_app(test_config=None):
     @app.route('/hello')
     def hello():
         return 'Hello, World!'
-    from . import db 
+    from . import db
     db.init_app(app)
 
     from . import auth
@@ -39,5 +48,8 @@ def create_app(test_config=None):
     from . import blog
     app.register_blueprint(blog.bp)
     app.add_url_rule('/', endpoint='index')
+
+    from .api import PostAPI
+    register_api(app, PostAPI, 'post_api', '/api/posts', pk='post_id')
     
     return app

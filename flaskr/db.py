@@ -30,6 +30,15 @@ class Post(sql.Model):
     def __repr__(self):
         return '<Post %r>' % self.title
 
+    def to_json(self):
+        return {
+            'id': self.id,
+            'title': self.title,
+            'body': self.body,
+            'created': self.created,
+            'author_id': self.author_id,
+        }
+
 
 def init_db():
     with current_app.app_context():
